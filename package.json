@@ -1,0 +1,20 @@
+{
+  "name": "ice-maker-sim",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "冰壶场制冰师模拟游戏 — 真实物理的制冰/洒点/刮冰/赛事评分模拟",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "smoke": "tsx scripts/smoke.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "playwright-core": "^1.65.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.7"
+  }
+}
