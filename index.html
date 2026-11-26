@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230891b2'/%3E%3Cpath d='M32 12v40M15 22l34 20M49 22L15 42' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <title>冰语制冰师 · Curling Ice Maker Lab</title>
+    <meta name="description" content="按冻结、洒点、卵石接触、霜与冰速物理运行的冰壶制冰模拟游戏。" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">冰</div>
+          <div>
+            <h1>冰语制冰师</h1>
+            <p>CURLING ICE MAKER LAB · 赛前 6 局保障</p>
+          </div>
+        </div>
+        <div class="top-controls">
+          <label class="venue-select">
+            <span>场馆 / 制冷系统</span>
+            <select id="venueSelect"></select>
+          </label>
+          <div class="clock-card">
+            <span>馆内时钟</span>
+            <strong id="clockText">--:--</strong>
+          </div>
+          <div class="time-buttons" role="group" aria-label="时间速度">
+            <button data-speed="0">暂停</button>
+            <button data-speed="60">60×</button>
+            <button data-speed="180" class="active">180×</button>
+            <button data-speed="600">600×</button>
+          </div>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="游戏页面">
+        <button class="tab active" data-page="operations"><b>1</b> 制冰作业</button>
+        <button class="tab" data-page="inspection"><b>2</b> 冰面检测</button>
+        <button class="tab" data-page="environment"><b>3</b> 场馆环境</button>
+        <button class="tab" data-page="evaluation"><b>4</b> 赛事评价</button>
+      </nav>
+
+      <main class="layout">
+        <aside class="panel control-scroll">
+          <!-- 制冰作业 -->
+          <section class="page-panel active" data-page-panel="operations">
+            <div class="panel-title">
+              <h2>分层浇水与找冰</h2>
+              <p>每层厚度、水温和盘管温度决定冻透时间。厚层夹生时洒点会直接判废。</p>
+            </div>
+
+            <div class="card">
+              <h3><span class="step-no">1</span> 浇一层水</h3>
+              <label class="field">
+                <span>单层厚度 <b id="floodThicknessVal">1.2 mm</b></span>
+                <input id="floodThickness" type="range" min="0.4" max="5" step="0.1" value="1.2" />
+                <em>≥1.6mm 属于需重点确认冻透的厚层</em>
+              </label>
+              <label class="field">
+                <span>浇水温度 <b id="floodWaterVal">42 °C</b></span>
+                <input id="floodWater" type="range" min="1" max="75" step="1" value="42" />
+              </label>
+              <div class="calc-line">
+                <span>预计冻透</span>
+                <strong id="freezeEta">-- min</strong>
+              </div>
+              <div class="calc-line">
+                <span>当前盘管温度</span>
+                <strong id="opPipeTemp">-- °C</strong>
+              </div>
+              <button class="btn primary big" id="addFloodBtn">浇水并记录新冰层</button>
+              <div id="layerList" class="layer-list"></div>
+            </div>
+
+            <div class="card">
+              <h3><span class="step-no">2</span> 基层刮平</h3>
+              <label class="field">
+                <span>高点下刀量 <b id="baseCutVal">0.38 mm</b></span>
+                <input id="baseCut" type="range" min="0.05" max="1.1" step="0.01" value="0.38" />
+              </label>
+              <button class="btn" id="scrapeBaseBtn">刮掉平面以上的高点</button>
+              <p class="hint" id="baseScrapeHint">刮平遍数：0。检测页会把局部高低差超过 1mm 的位置标红。</p>
+            </div>
+
+            <div class="card pebble-card">
+              <h3><span class="step-no">3</span> 背水箱倒退洒点</h3>
+              <div class="mini-grid">
+                <label class="field">
+                  <span>水温 <b id="pebbleWaterVal">22°C</b></span>
+                  <input id="pebbleWater" type="range" min="1" max="65" step="1" value="22" />
+                </label>
+                <label class="field">
+                  <span>水箱高度 <b id="tankHeightVal">1.10m</b></span>
+                  <input id="tankHeight" type="range" min="0.3" max="2" step="0.05" value="1.1" />
+                </label>
+                <label class="field">
+                  <span>喷头孔径 <b id="nozzleVal">1.6mm</b></span>
+                  <input id="nozzle" type="range" min="0.8" max="4" step="0.1" value="1.6" />
+                </label>
+                <label class="field">
+                  <span>倒退速度 <b id="walkSpeedVal">0.70m/s</b></span>
+                  <input id="walkSpeed" type="range" min="0.25" max="1.4" step="0.05" value="0.7" />
+                </label>
+                <label class="field wide">
+                  <span>走行居中偏差 <b id="balanceVal">0cm</b></span>
+                  <input id="balance" type="range" min="-20" max="20" step="1" value="0" />
+                </label>
+              </div>
+              <div class="preview-grid" id="pebblePreview"></div>
+              <button class="btn cyan big" id="startPebbleBtn">背上水箱，开始倒退洒点</button>
+              <div class="progress"><i id="walkProgressBar"></i></div>
+              <p class="hint" id="walkHint">参数会改变水珠粒径、流量、每平米密度和左右分布。</p>
+            </div>
+
+            <div class="card">
+              <h3><span class="step-no">4</span> 刮刀削平卵石顶</h3>
+              <p class="hint">每刀削去约 0.18mm。削得越多，平顶接触半径越大，冰通常越慢；过尖则速度快但不稳定。</p>
+              <button class="btn warm big" id="scrapePebbleBtn">推刀削顶一遍</button>
+              <div id="pebbleStatus" class="status-lines"></div>
+            </div>
+          </section>
+
+          <!-- 检测 -->
+          <section class="page-panel" data-page-panel="inspection">
+            <div class="panel-title">
+              <h2>冰面检测与双道试滑</h2>
+              <p>局部 0.9m 窗口内高低差 &gt; 1mm 自动标红；左右两条试滑壶道比较冰速与走线。</p>
+            </div>
+            <div class="card">
+              <h3>视觉放大</h3>
+              <label class="field">
+                <span>起伏垂直夸张 <b id="heightExagVal">18×</b></span>
+                <input id="heightExag" type="range" min="4" max="42" step="1" value="18" />
+              </label>
+              <label class="field">
+                <span>卵石显示放大 <b id="pebbleScaleVal">6.2×</b></span>
+                <input id="pebbleScale" type="range" min="2" max="13" step="0.1" value="6.2" />
+              </label>
+              <div class="view-buttons">
+                <button class="btn" data-view="panorama">全景</button>
+                <button class="btn" data-view="top">俯视检测</button>
+                <button class="btn" data-view="close">近景看卵石</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3>全场高差热力图</h3>
+              <canvas id="heatmap2d" width="914" height="110" aria-label="全场冰面高差热力图"></canvas>
+              <div class="heat-legend"><span>低</span><i></i><span>0.4mm</span><i class="mid"></i><span>0.8mm</span><i class="high"></i><span>&gt;1mm 标红</span></div>
+            </div>
+            <div class="card">
+              <h3>试滑壶</h3>
+              <p class="hint">初速 2.80m/s，计时门为前掷线 z=-13.5m 到后掷线 z=+13.5m，目标 12.60s。</p>
+              <button class="btn primary big" id="runTrialBtn">放出左右双道试滑壶</button>
+              <div id="trialQuick" class="trial-quick">尚未试滑。</div>
+            </div>
+            <div class="card formula-card">
+              <h3>计算口径</h3>
+              <p>冻结：Stefan 热阻近似 + 水的显热/潜热。</p>
+              <p>洒点：孔口出流 Q=CdA√(2gh)，体积守恒换算半球半径。</p>
+              <p>冰速：接触面积、密度、均匀度、冰温、霜和磨损共同进入摩擦系数。</p>
+            </div>
+          </section>
+
+          <!-- 环境 -->
+          <section class="page-panel" data-page-panel="environment">
+            <div class="panel-title">
+              <h2>场馆与制冷系统</h2>
+              <p>四种虚构场馆/系统。观众增加湿负荷，湿度越过结霜设定值后霜量上升并降低冰速。</p>
+            </div>
+            <div class="venue-cards" id="venueCards"></div>
+            <div class="card">
+              <h3>环境控制</h3>
+              <label class="field">
+                <span>制冷盘管温度 <b id="envPipeVal">-18°C</b></span>
+                <input id="envPipe" type="range" min="-27" max="-6" step="0.5" value="-18" />
+              </label>
+              <label class="field">
+                <span>室温设定 <b id="roomSetVal">11.0°C</b></span>
+                <input id="roomSet" type="range" min="6" max="18" step="0.5" value="11" />
+              </label>
+              <label class="field">
+                <span>结霜湿度阈值 <b id="frostThresholdVal">62%</b></span>
+                <input id="frostThreshold" type="range" min="45" max="85" step="1" value="62" />
+              </label>
+              <label class="field">
+                <span>除湿机出力 <b id="dehumidifierVal">55%</b></span>
+                <input id="dehumidifier" type="range" min="0" max="1" step="0.01" value="0.55" />
+              </label>
+              <label class="field">
+                <span>观众入座率 <b id="crowdVal">25%</b></span>
+                <input id="crowd" type="range" min="0" max="1" step="0.01" value="0.25" />
+              </label>
+            </div>
+          </section>
+
+          <!-- 评价 -->
+          <section class="page-panel" data-page-panel="evaluation">
+            <div class="panel-title">
+              <h2>赛事评价</h2>
+              <p>比赛方按冰速稳定、左右一致、走线和冻透合规打分。每局后观众、霜和卵石磨损都会变化。</p>
+            </div>
+            <div class="card match-card">
+              <div class="end-dots" id="endDots"></div>
+              <button class="btn primary big" id="completeEndBtn">进行第 1 局并提交评分</button>
+              <button class="btn danger" id="resetBtn">重开一块冰</button>
+              <div id="finalVerdict" class="final-verdict" hidden></div>
+            </div>
+            <div id="reportList" class="report-list"></div>
+          </section>
+        </aside>
+
+        <section class="stage">
+          <div class="stage-top">
+            <div>
+              <span class="stage-kicker" id="stageKicker">制冰作业 WebGL2</span>
+              <h2 id="stageTitle">全场冰面与 Instanced Pebbles</h2>
+            </div>
+            <div class="stage-badges">
+              <span class="badge" id="phaseBadge">准备中</span>
+              <span class="badge good" id="certBadge">检查中</span>
+            </div>
+          </div>
+          <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="glCanvas" aria-label="WebGL2 冰壶冰面和几十万卵石点"></canvas>
+            <div class="canvas-tools">
+              <button class="icon-btn" data-view="panorama" title="全景">全景</button>
+              <button class="icon-btn" data-view="top" title="俯视">俯视</button>
+              <button class="icon-btn" data-view="close" title="近景">近景</button>
+            </div>
+            <div class="canvas-hint">拖拽旋转 · 滚轮缩放 · 俯视页可检查红色高差区</div>
+            <div class="ruin-banner" id="ruinBanner" hidden>
+              <b>赛道判废</b>
+              <span id="ruinBannerText"></span>
+            </div>
+            <div class="webgl-error" id="webglError" hidden>
+              <h3>WebGL2 不可用</h3>
+              <p id="webglErrorText"></p>
+            </div>
+          </div>
+          <div class="telemetry-grid">
+            <div><span>冰温</span><strong id="hudIceTemp">--°C</strong></div>
+            <div><span>室温 / 湿度</span><strong id="hudRoomRh">--</strong></div>
+            <div><span>霜量</span><strong id="hudFrost">--%</strong></div>
+            <div><span>卵石实例</span><strong id="hudPebbles">0</strong></div>
+            <div><span>FPS / DPR</span><strong id="hudFps">--</strong></div>
+          </div>
+        </section>
+
+        <aside class="panel side-scroll">
+          <section data-aside="operations" class="aside-panel active">
+            <div class="panel-title compact"><h2>制冰师 checklist</h2></div>
+            <ul class="checklist" id="certListOps"></ul>
+            <div class="card subtle">
+              <h3>实时作业日志</h3>
+              <div id="logList" class="log-list"></div>
+            </div>
+          </section>
+
+          <section data-aside="inspection" class="aside-panel">
+            <div class="panel-title compact"><h2>检测结果</h2></div>
+            <div class="metric-grid">
+              <div><span>最大局部高差</span><strong id="flatMax">--</strong><em>mm / 0.9m窗口</em></div>
+              <div><span>P95 高差</span><strong id="flatP95">--</strong><em>mm</em></div>
+              <div class="danger-metric"><span>标红面积</span><strong id="redArea">--</strong><em>高差&gt;1mm</em></div>
+              <div><span>左右均高差</span><strong id="sideDiff">--</strong><em>mm</em></div>
+              <div><span>RMS 起伏</span><strong id="rms">--</strong><em>mm</em></div>
+              <div><span>摩擦系数 μ</span><strong id="trialMu">--</strong><em>当前试滑</em></div>
+            </div>
+            <div class="trial-result" id="trialResult">
+              <h3>双道秒数</h3>
+              <div class="time-pair">
+                <div><span>左道</span><b id="leftTime">--</b></div>
+                <div><span>平均</span><b id="avgTime">--</b></div>
+                <div><span>右道</span><b id="rightTime">--</b></div>
+              </div>
+              <p id="trialMessage">调整卵石密度与削顶量后试滑。</p>
+            </div>
+          </section>
+
+          <section data-aside="environment" class="aside-panel">
+            <div class="panel-title compact"><h2>环境仪表</h2></div>
+            <div class="gauge-grid">
+              <div><span>室温</span><strong id="gaugeRoom">--°C</strong></div>
+              <div><span>湿度</span><strong id="gaugeRh">--%</strong></div>
+              <div><span>露点</span><strong id="gaugeDew">--°C</strong></div>
+              <div><span>冰面温度</span><strong id="gaugeIce">--°C</strong></div>
+            </div>
+            <div class="card subtle">
+              <h3>湿度 / 霜量趋势</h3>
+              <canvas id="climateChart" width="360" height="180"></canvas>
+              <div class="chart-legend"><i class="rh"></i>湿度% <i class="frost"></i>霜量×100</div>
+            </div>
+            <div class="card subtle" id="venueSpec"></div>
+          </section>
+
+          <section data-aside="evaluation" class="aside-panel">
+            <div class="panel-title compact"><h2>评分模型</h2></div>
+            <div class="card subtle">
+              <div class="score-formula">
+                <p><b>38%</b> 冰速与跨局稳定性</p>
+                <p><b>25%</b> 左右秒数/高度/密度一致</p>
+                <p><b>25%</b> 走线偏移与标红面积</p>
+                <p><b>12%</b> 冻透合规</p>
+                <p class="danger-text">厚层未冻透即洒点：总分直接 0，赛道判废。</p>
+              </div>
+            </div>
+            <div class="card subtle">
+              <h3>当前认证清单</h3>
+              <ul class="checklist" id="certListEval"></ul>
+            </div>
+            <div class="card subtle">
+              <h3>最新建议</h3>
+              <ul class="advice-list" id="evalAdvice"><li>完成一局后生成。</li></ul>
+            </div>
+          </section>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
