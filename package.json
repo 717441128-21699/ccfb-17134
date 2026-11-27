@@ -1,0 +1,26 @@
+{
+  "name": "curling-icemaker-sim",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "冰壶场制冰师模拟游戏 — 基于物理的制冰、洒点、刮冰与赛事评分模拟",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "calibrate": "tsx scripts/calibrate.ts",
+    "test:rules": "tsx scripts/rules.ts",
+    "test:smoke": "tsx scripts/smoke.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "puppeteer-core": "^23.11.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true
+  }
+}
